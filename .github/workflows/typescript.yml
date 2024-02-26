@@ -1,0 +1,95 @@
+name: TypeScript CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  typescript-ci:
+    name: Typescript (Node ${{ matrix.node }}, pnpm ${{ matrix.pnpm }}) - ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+        node:
+          - 20
+        pnpm:
+          - 8 # latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ matrix.pnpm }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm lint
+      - name: pnpm format:check
+        run: |
+          pnpm format:check || {
+            pnpm format
+            git diff
+            exit 1
+          }
+      - run: pnpm build:all
+      - run: pnpm exec publint
+
+  biome:
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+    name: Biome
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - uses: mongolyy/reviewdog-action-biome@v1
+
+  misspell:
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+    name: Misspell
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-misspell@v1
+        with:
+          path: |
+            src
+            test
+            *.md
+            licenses
+
+  actionlint:
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+    name: Actionlint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-actionlint@v1

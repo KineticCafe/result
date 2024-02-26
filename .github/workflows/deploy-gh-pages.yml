@@ -1,0 +1,37 @@
+name: Deploy to Github pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_pages:
+    concurrency: ci-pages-${{ github.ref }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build:docs
+
+      - run: touch docs/.nojekyll
+
+      - uses: JamesIves/github-pages-deploy-action@v4.5.0
+        with:
+          folder: docs
