@@ -5,8 +5,19 @@
 
 ## Description
 
-@kineticcafe/result is another Typescript implementation of the Rust `Result`
-type.
+@kineticcafe/result is another [`Result` type][wiki] implementation for
+Typescript, loosely based on Rust's [std::result][] type.
+
+`Result` types contain a value or possible error and should be used to return
+different types for success and failure without using exceptions for normal flow
+control. As the values in `Result`s are not directly accessible, there is
+explicit error handling at the point of use, through matching (`Result#match`),
+transformation (`Result#andThen`, `Result#orElse`), unwrapping (`Result#unwrap`,
+`Result#unwrapErr`), mapping (`Result#map`, `Result#mapErr`), or propagation
+(returning the result to callers).
+
+The @kineticcafe/result library additionally offers some utilities for dealing
+with arrays of `Result` types.
 
 ## Synopsis
 
@@ -14,7 +25,7 @@ type.
 import { Ok, Err } from '@kineticcafe/result'
 
 Ok(3) // A successful result
-Err('error') // An error
+Err('error') // A likely error
 ```
 
 ## Installation
@@ -23,7 +34,7 @@ Err('error') // An error
 `package.json`.
 
 ```sh
-npm add @kineticcafe/result@^0.5
+npm add @kineticcafe/result@^0.6
 ```
 
 ## Semantic Versioning
@@ -48,3 +59,5 @@ details.
 [open source projects]: https://github.com/KineticCafe
 [semantic versioning]: http://semver.org/
 [licence.md]: https://github.com/KineticCafe/result/blob/main/Licence.md
+[std::result]: https://doc.rust-lang.org/std/result/index.html
+[wiki]: https://en.wikipedia.org/wiki/Result_type

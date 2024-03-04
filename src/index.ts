@@ -1,225 +1,259 @@
 /**
- * A Result model, loosely based on the Rust result type.
+ * A [`Result` type][wiki] for Typescript, loosely based on Rusts's [std::result][].
+ *
+ * [std::result]: https://doc.rust-lang.org/std/result/index.html
+ * [wiki]: https://en.wikipedia.org/wiki/Result_type
+ *
+ * `Result` types contain a value or possible error and should be used to return different
+ * types for success and failure without using exceptions for normal flow control. As the
+ * values in `Result`s are not directly accessible, there is explicit error handling at
+ * the point of use, through matching ({@link Result#match}), transformation ({@link
+ * Result#andThen}, {@link Result#orElse}), unwrapping ({@link Result#unwrap}, {@link
+ * Result#unwrapErr}), mapping ({@link Result#map}, {@link Result#mapErr}), or propagation
+ * (returning the result to callers).
+ *
+ * The @kineticcafe/result library additionally offers some utilities for dealing with
+ * arrays of `Result` types.
  *
  * @module
  */
 
 /**
- * `Result<T, E>` is used for returning and propagating errors.
+ * `Result<T, E>` is an implementation of a result type, holding a returned value or
+ * possible error.
  *
- * It can be constructed with {@link Ok} or {@link Err}.
+ * A `Result` can be used instead of throwing an exception, but the values are not
+ * directly accessible, requiring explicit consideration of success and failure paths.
+ *
+ * It can be constructed with {@link Ok} or {@link Err}. It may not be constructed
+ * directly.
+ *
+ * This version is loosely based on the Rust result type.
  *
  * @typeParam T - The type of the `Ok` value.
  * @typeParam E - The type of the `Err` value.
+ *
+ * @category `Result`
  */
 export class Result<T, E> {
   /** @internal */
-  // biome-ignore lint/complexity/noUselessConstructor: hiding from documentation
-  constructor() {}
+  constructor() {
+    if (this.constructor === Result) {
+      throw new Error('Result is abstract, use Ok() or Err()')
+    }
+  }
 
   /**
    * Returns `true` if the result is `Ok`.
    *
+   * If passed a predicate function, the `Ok` value must satisfy the condition.
+   *
+   * @param pred - An optional predicate to test the `Ok` value
+   *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(2)
-   * x.isOk() === true
+   * Ok(2).isOk()                   // => true
+   * Ok(0).isOk()                   // => true
+   * Ok(2).isOk((v) => v > 1)       // => true
+   * Ok(0).isOk((v) => v > 1)       // => false
    *
-   * const y: Result<number, string> = Err('hey')
-   * y.isOk() === false
+   * Err('hey').isOk()              // => false
+   * Err('hey').isOk((v) => v > 1)  // => false
    * ```
    */
-  isOk(): boolean {
-    throw new Error('Abstract Result')
+  isOk(pred?: (val: T) => boolean): boolean {
+    this.abstractMethod('isOk')
   }
 
   /**
-   * Returns `true` if the result is `Ok` and the contained value matches a
-   * predicate.
+   * Returns `true` if the result is `Ok` and the value satisfies the condition of the
+   * predicate function.
    *
-   * @param pred - The predicate to test the contained value
-   * @typeParam T - The type of the contained value
+   * @param pred - The predicate to test the `Ok` value
    *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(2)
-   * x.isOkAnd((v) => v > 1) === true
-   *
-   * const y: Result<number, string> = Ok(0)
-   * y.isOkAnd((v) => v > 1) === false
-   *
-   * const z: Result<number, string> = Err('hey')
-   * z.isOkAnd((v) => v > 1) === false
+   * Ok(2).isOkAnd((v) => v > 1)      // => true
+   * Ok(0).isOkAnd((v) => v > 1)      // => false
+   * Err('hey').isOkAnd((v) => v > 1) // => false
    * ```
+   *
+   * @deprecated Use {@link Result#isOk} instead.
    */
   isOkAnd(pred: (val: T) => boolean): boolean {
-    throw new Error('Abstract Result')
+    return this.isOk(pred)
   }
 
   /**
    * Returns `true` if the result is `Err`.
    *
+   * If passed a predicate function, the `Err` value must satisfy the condition.
+   *
+   * @param pred - The predicate to test the `Err`
+   *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(2)
-   * x.isErr() === false
+   * Ok(2).isErr()                          // => false
+   * Ok(2).isErr((e) => e === 'hey')        // => false
    *
-   * const y: Result<number, string> = Err('hey')
-   * y.isErr() === true
+   * Err('hey').isErr() // => true
+   * Err('howdy').isErr((e) => e === 'hey') // => false
+   * Err('hey').isErr((e) => e === 'hey')   // => true
    * ```
    */
-  isErr(): boolean {
-    throw new Error('Abstract Result')
+  isErr(pred?: (val: E) => boolean): boolean {
+    this.abstractMethod('isErr')
   }
 
   /**
-   * Returns `true` if the result is `Err` and the contained error matches
-   * a predicate.
+   * Returns `true` if the result is `Err` and the value satisfies the condition of the
+   * predicate function.
    *
-   * @param pred - The predicate to test the contained error
-   * @typeParam E - The type of the contained error
+   * @param pred - The predicate to test the `Err`
    *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(2)
-   * x.isErrAnd((e) => e === 'hey') === false
-   *
-   * const y: Result<number, string> = Err('howdy')
-   * y.isErrAnd((e) => e === 'hey') === false
-   *
-   * const z: Result<number, string> = Err('hey')
-   * z.isErrAnd((e) => e === 'hey') === true
+   * Ok(2).isErrAnd((e) => e === 'hey')        // => false
+   * Err('howdy').isErrAnd((e) => e === 'hey') // => false
+   * Err('hey').isErrAnd((e) => e === 'hey')   // => true
    * ```
+   *
+   * @deprecated Use {@link Result#isErr} instead.
    */
   isErrAnd(pred: (val: E) => boolean): boolean {
-    throw new Error('Abstract Result')
+    return this.isErr(pred)
   }
 
   /**
    * Maps a `Result<T, E>` to `Result<U, E>` by applying a function to
-   * the contained `Ok` value, leaving an `Err` value untouched.
+   * the `Ok` value, leaving an `Err` value untouched.
    *
    * @param fn - A function that maps `T` to `U`
-   * @typeParam T - The type of the contained value
-   * @typeParam U - The type of the new contained value
-   * @typeParam E - The type of the contained error
    *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(2)
-   * x.map((v) => v * 2) === Ok(4)
-   *
-   * const y: Result<number, string> = Err('hey')
-   * y.map((v) => v * 2) === Err('hey')
+   * Ok(2).map((v) => v * 2)      // => Ok(4)
+   * Err('hey').map((v) => v * 2) // => Err('hey')
    * ```
    */
   map<U>(fn: (val: T) => U): Result<U, E> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('map')
   }
 
   /**
-   * Returns the provided `defaultValue` (if `Err`), or applies a function to
-   * the contained value (if `Ok`).
+   * Runs a function over the `Ok` value, a default value, or a value computed over the
+   * `Err` value.
    *
    * @remarks
    *
-   * This implementation reverses the order of the mapping functions from the
-   * Rust version.
+   * This function combines the Rust functions `Result.map_or` and `Reuslt.map_or_else`
+   * and reverses the order of the parameters. That is, the Rust calls:
    *
-   * @param defaultValue - The default value to return if `Err`
-   * @param fn - A function that maps `T` to `U` if `Ok`
-   * @typeParam T - The type of the contained value
-   * @typeParam U - The type of the new contained value
-   * @typeParam E - The type of the contained error
-   *
-   * @example
-   *
-   * ```typescript
-   * const x: Result<string, string> = Ok('foo')
-   * x.mapOr(42, (v) => v.length) === 3
-   *
-   * const y: Result<string, string> = Err('bar')
-   * y.mapOr(42, (v) => v.length) === 42
+   * ```rust
+   * Ok(2).map_or(42, |v| v * 2) // => 4
+   * Ok(2).map_or_else(|e| e.length, |v| v * 2) // => 4
    * ```
    *
-   * @see {@link Result#mapOrElse}
-   */
-  mapOr<U>(fn: (val: T) => U, defaultValue: U): U {
-    throw new Error('Abstract Result')
-  }
-
-  /**
-   * Maps a `Result<T, E>` to `U` by applying a fallback function `defaultFn` to
-   * a contained `Err` value, or function `fn` to a contained `Ok` value.
+   * Will be:
    *
-   * This function can be used to unpack a successful result while handling an
-   * error.
+   * ```typescript
+   * Ok(2).mapOr((v) => v * 2, 42)              // => 4
+   * Ok(2).mapOr((v) => v * 2, (e) => e.length) // => 4
+   * ```
    *
-   * @remarks
-   *
-   * This implementation reverses the order of the mapping functions from the
-   * Rust version.
-   *
-   * @param fn - A function that maps `T` to `U` if `Ok`
-   * @param defaultFn - The default value to return if `Err`
-   * @typeParam T - The type of the contained value
-   * @typeParam U - The type of the new contained value
-   * @typeParam E - The type of the contained error
+   * @param fn - If `Ok`, will be run on the value, mapping `T` to `U`
+   * @param defaultValue - If `Err` and a function, runs on the error, mapping `E` to `U`.
+   *        If not a function, returns the value.
+   * @typeParam U - The type of the new `Ok` value
    *
    * @example
    *
    * ```typescript
    * const k = 21
    *
-   * const x: Result<string, string> = Ok('foo')
-   * x.mapOrElse((v) => v.length, (e) => k * 2) === 3
-   *
-   * const y: Result<string, string> = Err('bar')
-   * y.mapOrElse((v) => v.length, (e) => k * 2) === 42
+   * Ok('foo').mapOr((v) => v.length, 42)  // => 3
+   * Err('bar').mapOr((v) => v.length, 42) // => 42
+   * Ok('foo').mapOr((v) => v.length, (e) => k * 2)  // => 3
+   * Err('bar').mapOr((v) => v.length, (e) => k * 2) // => 42
    * ```
+   *
+   * @see {@link Result#mapOrElse}
+   */
+  mapOr<U>(fn: (val: T) => U, defaultValue: U | ((err: E) => U)): U {
+    this.abstractMethod('mapOr')
+  }
+
+  /**
+   * Maps a `Result<T, E>` to `U` by applying a fallback function `defaultFn` to
+   * a `Err` value, or function `fn` to a `Ok` value.
+   *
+   * This function can be used to unpack a successful result while handling an
+   * error.
+   *
+   * @remarks
+   *
+   * This function reverses the order of the parameters. That is, the Rust call:
+   *
+   * ```rust
+   * Ok(2).map_or_else(|e| e.length, |v| v * 2) // => 4
+   * ```
+   *
+   * Will be:
+   *
+   * ```typescript
+   * Ok(2).mapOrElse((v) => v * 2, (e) => e.length) // => 4
+   * ```
+   *
+   * @param fn - A function that maps `T` to `U` if `Ok`
+   * @param defaultFn - The default value to return if `Err`
+   * @typeParam U - The type of the new `Ok` value
+   *
+   * @example
+   *
+   * ```typescript
+   * const k = 21
+   *
+   * Ok('foo').mapOrElse((v) => v.length, (e) => k * 2)  // => 3
+   * Err('bar').mapOrElse((v) => v.length, (e) => k * 2) // => 42
+   * ```
+   *
+   * @deprecated Use {@link Result#mapOr} instead.
    */
   mapOrElse<U>(fn: (val: T) => U, defaultFn: (val: E) => U): U {
-    throw new Error('Abstract Result')
+    return this.mapOr(fn, defaultFn)
   }
 
   /**
    * Maps a `Result<T, E>` to `Result<T, F>` by applying a function to
-   * a contained `Err`, leaving an `Ok` value untouched.
+   * a `Err`, leaving an `Ok` value untouched.
    *
    * This function can be used to pass through a successful result while
    * handling an error.
    *
    * @param fn - A function that maps `E` to `F` if `Err`
-   * @typeParam T - The type of the contained value
-   * @typeParam E - The type of the contained error
-   * @typeParam F - The type of the new contained error
+   * @typeParam F - The type of the new `Err` value
    *
    * @example
    *
    * ```typescript
-   * const x: Result<number, number> = Ok(2)
-   * x.mapErr((e) => new Error(`error code: ${e}`)) == Ok(2)
-   *
-   * const y: Result<number, number> = Err(13)
-   * y.mapErr((e) => new Error(`error code: ${e}`)) == Err('error code: 13')
+   * Ok(2).mapErr((e) => new Error(`error code: ${e}`))   // => Ok(2)
+   * Err(13).mapErr((e) => new Error(`error code: ${e}`)) // => Err('error code: 13')
    * ```
    */
   mapErr<F>(fn: (val: E) => F): Result<T, F> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('mapErr')
   }
 
   /**
-   * Calls the provided closure with a reference to the contained value (if
+   * Calls the provided function with a reference to the `Ok` value (if
    * `Ok`). The `Result<T, E>` is returned unmodified.
    *
-   * @param fn - The closure to call.
-   * @typeParam T - The type of the contained value
-   * @typeParam E - The type of the contained error
+   * @param fn - The function to call.
    *
    * @remarks
    *
@@ -228,41 +262,41 @@ export class Result<T, E> {
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(2)
-   * x.inspectOk((v) => console.log(`original: ${v}`))
-   *  .map((v) => v * v * v) === Ok(8)
+   * Ok(2)
+   *  .inspectOk((v) => console.log(`ok: ${v}`))
+   *  .map((v) => v * v * v)
+   * // => Ok(8)
    *
-   * // 'original: 2' will be written to the console
+   * // console output: 'ok: 2'
    * ```
    */
   inspectOk(fn: (val: T) => void): Result<T, E> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('inspectOk')
   }
 
   /**
-   * Calls the provided closure with a reference to the contained error (if
+   * Calls the provided function with a reference to the `Err` value (if
    * `Err`). The `Result<T, E>` is returned unmodified.
    *
-   * @param fn - The closure to call.
-   * @typeParam T - The type of the contained value
-   * @typeParam E - The type of the contained error
+   * @param fn - The function to call.
    *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Err('bar')
-   * x.inspectErr((v) => console.log(`error: ${v}`))
-   *  .map((v) => v * v * v) === Err('bar')
+   * Err('bar')
+   *   .inspectErr((v) => console.log(`err: ${v}`))
+   *   .map((v) => v * v * v)
+   * // => Err('bar')
    *
-   * // 'error: bar' will be written to the console
+   * // console output: 'err: bar'
    * ```
    */
   inspectErr(fn: (val: E) => void): Result<T, E> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('inspectErr')
   }
 
   /**
-   * Returns the contained `Ok` value or throws an exception if `Err`.
+   * Returns the `Ok` value or throws an exception if `Err`.
    *
    * Because this function may throw an exception, its use is discouraged.
    * Instead, prefer to use {@link Result#match} to handle the `Err` case
@@ -271,50 +305,48 @@ export class Result<T, E> {
    * @param message - The message to display before the error value in the
    *                  thrown exception if `Err`.
    * @param errorClass - The error class to use, defaulting to `Error`.
-   * @typeParam T - The type of the contained value
    *
    * @example
    *
    * ```typescript
-   * let x: Result<number, string> = Err('emergency failure')
    * try {
-   *   x.expect('Testing expect')
+   *   Err('emergency failure').expect('Testing expect')
    * } catch (e) {
-   *   e.message === 'Testing expect: emergency failure'
+   *   console.log(e.message)
+   *   // console output: 'Testing expect: emergency failure'
    * }
    * ```
    */
-  expect(message: string, errorClass: DynamicError = Error): T {
-    throw new Error('Abstract Result')
+  expect(message: string, errorClass: ErrorClass = Error): T | never {
+    this.abstractMethod('expect')
   }
 
   /**
-   * Returns the contained `Ok` value, or throws an exception if `Err`.
+   * Returns the `Ok` value, or throws an exception if `Err`.
    *
    * Because this function may throw an exception, its use is discouraged.
    * Instead, prefer to use {@link Result#match} to handle the `Err` case
    * explicitly, or call {@link Result#unwrapOr} or {@link Result#unwrapOrElse}.
    *
    * @param errorClass - The error class to use, defaulting to `ReferenceError`.
-   * @typeParam T - The type of the contained value
    *
    * @example
    *
    * ```typescript
-   * let x: Result<number, string> = Err('emergency failure')
    * try {
-   *   x.unwrap()
+   *   Err('emergency failure').unwrap()
    * } catch (e) {
-   *   e.message === 'Called Result#unwrap on an Err value: emergency failure'
+   *   console.log(e.message)
+   *   // console output: 'Called Result#unwrap on an Err value: emergency failure'
    * }
    * ```
    */
-  unwrap(errorClass: DynamicError = ReferenceError): T | never {
-    throw new Error('Abstract Result')
+  unwrap(errorClass: ErrorClass = ReferenceError): T | never {
+    this.abstractMethod('unwrap')
   }
 
   /**
-   * Returns the contained `Err` value or throws an exception if `Ok`.
+   * Returns the `Err` value or throws an exception if `Ok`.
    *
    * Because this function may throw an exception. Prefer to use {@link
    * Result#match} to handle both the `Ok` and `Err` cases explicitly.
@@ -322,7 +354,6 @@ export class Result<T, E> {
    * @param message - The message to display before the error value in the
    *                  thrown exception if `Err`.
    * @param errorClass - The error class to use.
-   * @typeParam E - The type of the contained error
    *
    * @example
    *
@@ -335,74 +366,85 @@ export class Result<T, E> {
    * }
    * ```
    */
-  expectErr(message: string, errorClass: DynamicError = Error): E {
-    throw new Error('Abstract Result')
+  expectErr(message: string, errorClass: ErrorClass = Error): E | never {
+    this.abstractMethod('expectErr')
   }
 
   /**
-   * Returns the contained `Err` value, or throws an exception if `Ok`.
+   * Returns the `Err` value, or throws an exception if `Ok`.
    *
    * Because this function may throw an exception. Prefer to use {@link
    * Result#match} to handle both the `Ok` and `Err` cases explicitly.
    *
    * @param errorClass - The error class to use, defaulting to `ReferenceError`.
-   * @typeParam E - The type of the contained value
    *
    * @example
    *
    * ```typescript
-   * let x: Result<number, string> = Ok(10)
    * try {
-   *   x.unwrapErr()
+   *   Ok(10).unwrapErr()
    * } catch (e) {
-   *   e.message === 'Called Result#unwrapErr on an Ok value: 10'
+   *   console.log(e.message)
+   *   // console output: 'Called Result#unwrapErr on an Ok value: 10'
    * }
    * ```
    */
-  unwrapErr(errorClass: DynamicError = ReferenceError): E | never {
-    throw new Error('Abstract Result')
+  unwrapErr(errorClass: ErrorClass = ReferenceError): E | never {
+    this.abstractMethod('unwrapErr')
   }
 
   /**
-   * Returns the contained `Ok` value or a provided default value.
+   * Returns the `Ok` value or a provided default value.
    *
    * @param defaultValue - The default value to return if `Err`
-   * @typeParam T - The type of the contained value
+   *
+   * @remarks
+   *
+   * This functions combines the Rust functions `Result.or` and `Result.or_else`. That is,
+   * the Rust calls:
+   *
+   * ```rust
+   * Ok(9).unwrap_or(42)                // => 9
+   * Ok(9).unwrap_or_else(|e| e.length) // => 9
+   * ```
+   *
+   * will be:
+   *
+   * ```typescript
+   * Ok(9).unwrapOr(42)               // => 9
+   * Ok(9).unwrapOr((e) => e.length)  // => 9
+   * ```
    *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(9)
-   * x.unwrapOr(42) === 9
-   *
-   * const y: Result<number, string> = Err('error')
-   * y.unwrapOr(42) === 42
+   * Ok(9).unwrapOr(42)                   // => 9
+   * Err('error').unwrapOr(42)            // => 42
+   * Ok(9).unwrapOr((e) => e.length)      // => 9
+   * Err('foo').unwrapOr((e) => e.length) // => 3
    * ```
    */
-  unwrapOr(defaultValue: T): T {
-    throw new Error('Abstract Result')
+  unwrapOr(defaultValue: T | ((err: E) => T)): T {
+    this.abstractMethod('unwrapOr')
   }
 
   /**
-   * Returns the contained `Ok` value or computes it from a provided function
-   * that transforms the contained `Err` value.
+   * Returns the `Ok` value or computes it from a provided function
+   * that transforms the `Err` value.
    *
    * @param fn - The function to transform `Err` to the default value
-   * @typeParam T - The type of the contained value
-   * @typeParam E - The type of the contained error
    *
    * @example
    *
    * ```typescript
-   * const x: Result<number, string> = Ok(9)
-   * x.unwrapOrElse((e) => e.length) === 9
-   *
-   * const y: Result<number, string> = Err('foo')
-   * y.unwrapOrElesE((e) => e.length) === 3
+   * Ok(9).unwrapOrElse((e) => e.length)       // => 9
+   * Err('foo').unwrapOrElse((e) => e.length) // => 3
    * ```
+   *
+   * @deprecated Use {@link Result#unwrapOr} instead.
    */
   unwrapOrElse(fn: (val: E) => T): T {
-    throw new Error('Abstract Result')
+    return this.unwrapOr(fn)
   }
 
   /**
@@ -419,7 +461,7 @@ export class Result<T, E> {
    * ```
    */
   and<U>(result: Result<U, E>): Result<U, E> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('and')
   }
 
   /**
@@ -441,7 +483,7 @@ export class Result<T, E> {
    * ```
    */
   andThen<U>(fn: (val: T) => Result<U, E>): Result<U, E> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('andThen')
   }
 
   /**
@@ -450,19 +492,14 @@ export class Result<T, E> {
    * @example
    *
    * ```typescript
-   * const w: Result<number, string> = Ok(2)
-   * const x: Result<number, string> = Err('not a 2')
-   * const y: Result<string, string> = Ok('different type')
-   * const z: Result<string, string> = Err('another error')
-   *
-   * w.or(x) === Ok(2)
-   * w.or(y) === Ok(2)
-   * x.or(y) === Err('not a 2')
-   * x.or(z) === Err('another error')
+   * Ok(2).or(Err('not a 2'))                // => Ok(2)
+   * Ok(2).or(Ok('different ok'))            // => Ok(2)
+   * Err('not a 2').or(Ok('different ok'))   // => Ok('different ok')
+   * Err('not a 2').or(Err('different err')) // => Err('different err')
    * ```
    */
   or<F>(result: Result<T, F>): Result<T, F> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('or')
   }
 
   /**
@@ -477,16 +514,47 @@ export class Result<T, E> {
    *    return x <= 9 ? Ok(`${x * x}`) : Err('overflowed')
    * }
    *
-   * Err(2).orElse(squaredString).unwrap() === '4'
-   * Ok(10).orElse(squaredString).unwrapErr() == 'overflowed'
+   * Err(2).orElse(squaredString).unwrap()    // => '4'
+   * Ok(10).orElse(squaredString).unwrapErr() // => 'overflowed'
    * ```
    */
   orElse<F>(fn: (val: E) => Result<T, F>): Result<T, F> {
-    throw new Error('Abstract Result')
+    this.abstractMethod('orElse')
   }
 
-  match<U>(matcher: Match<T, E, U>): U {
-    throw new Error('Abstract Result')
+  /**
+   * Calls `matcher.ok` if `Ok` or `matcher.err` if `Err`.
+   *
+   * This is *roughly* equivalent to calling {@link Result#andThen} followed by {@link
+   * Result#orElse}.
+   *
+   * @example
+   *
+   * ```typescript
+   * Ok(10).match({ ok: (v) v * v, err: (_e) => 0 })          // => 100
+   * Err('overflow').match({ ok: (v) v * v, err: (_e) => 0 }) // => 0
+   * ```
+   *
+   * @remarks
+   *
+   * For reasons mostly related to how Typescript inference works, this module is not
+   * implemented in terms of `match`, but *it could be*. That is, `andThen` could be:
+   *
+   * ```typescript
+   * const andThen = <T, E, U>(result: Result<T, E>, fn: (T) => Result<U, E>) => {
+   *    return result.match({
+   *      ok: (t: T) => fn(t)
+   *      err: (e: E) => Err(e) // or `result`
+   *    })
+   * }
+   * ```
+   */
+  match<U>(matcher: { ok: (t: T) => U; err: (e: E) => U }): U {
+    this.abstractMethod('match')
+  }
+
+  private abstractMethod(method: string): never {
+    throw new Error(`Abstract method Result#${method}`)
   }
 }
 
@@ -498,19 +566,11 @@ class OkResult<T, E> extends Result<T, E> {
     this.ok = ok
   }
 
-  isOk(): boolean {
-    return true
+  isOk(pred?: (val: T) => boolean): boolean {
+    return pred ? pred(this.ok) : true
   }
 
-  isOkAnd(pred: (val: T) => boolean): boolean {
-    return pred(this.ok)
-  }
-
-  isErr(): boolean {
-    return false
-  }
-
-  isErrAnd(_pred: (val: E) => boolean): boolean {
+  isErr(_pred?: (val: E) => boolean): boolean {
     return false
   }
 
@@ -518,11 +578,7 @@ class OkResult<T, E> extends Result<T, E> {
     return Ok(fn(this.ok))
   }
 
-  mapOr<U>(fn: (val: T) => U, _defaultValue: U): U {
-    return fn(this.ok)
-  }
-
-  mapOrElse<U>(fn: (val: T) => U, _defaultFn: (val: E) => U): U {
+  mapOr<U>(fn: (val: T) => U, defaultValue: U | ((err: E) => U)): U {
     return fn(this.ok)
   }
 
@@ -540,23 +596,23 @@ class OkResult<T, E> extends Result<T, E> {
     return this
   }
 
-  expect(_message: string, _errorClass: DynamicError = Error): T {
+  expect(_message: string, _errorClass: ErrorClass = Error): T {
     return this.ok
   }
 
-  unwrap(_errorClass: DynamicError = ReferenceError): T | never {
+  unwrap(_errorClass: ErrorClass = ReferenceError): T | never {
     return this.ok
   }
 
-  expectErr(message: string, errorClass: DynamicError = Error): E {
+  expectErr(message: string, errorClass: ErrorClass = Error): never {
     return unwrapFailed(message, this.ok, errorClass)
   }
 
-  unwrapErr(errorClass: DynamicError = ReferenceError): E | never {
+  unwrapErr(errorClass: ErrorClass = ReferenceError): never {
     return unwrapFailed('Called Result#unwrapErr on an Ok value', this.ok, errorClass)
   }
 
-  unwrapOr(_defaultValue: T): T {
+  unwrapOr(_defaultValue: T | ((err: E) => T)): T {
     return this.ok
   }
 
@@ -580,7 +636,7 @@ class OkResult<T, E> extends Result<T, E> {
     return Ok(this.ok)
   }
 
-  match<U>(matcher: Match<T, E, U>): U {
+  match<U>(matcher: { ok: (t: T) => U; err: (e: E) => U }): U {
     return matcher.ok(this.ok)
   }
 }
@@ -593,32 +649,23 @@ class ErrResult<T, E> extends Result<T, E> {
     this.err = err
   }
 
-  isOk(): boolean {
+  isOk(_pred: (val: T) => boolean): boolean {
     return false
   }
 
-  isOkAnd(_pred: (val: T) => boolean): boolean {
-    return false
-  }
-
-  isErr(): boolean {
-    return true
-  }
-
-  isErrAnd(pred: (val: E) => boolean): boolean {
-    return pred(this.err)
+  isErr(pred: (val: E) => boolean): boolean {
+    return pred ? pred(this.err) : true
   }
 
   map<U>(_fn: (val: T) => U): Result<U, E> {
     return Err(this.err)
   }
 
-  mapOr<U>(_fn: (val: T) => U, defaultValue: U): U {
-    return defaultValue
-  }
+  mapOr<U>(_fn: (val: T) => U, defaultValue: U | ((err: E) => U)): U {
+    const isFunction = (value: U | ((err: E) => U)): value is (err: E) => U =>
+      typeof value === 'function'
 
-  mapOrElse<U>(_fn: (val: T) => U, defaultFn: (val: E) => U): U {
-    return defaultFn(this.err)
+    return isFunction(defaultValue) ? defaultValue(this.err) : defaultValue
   }
 
   mapErr<F>(fn: (val: E) => F): Result<T, F> {
@@ -635,24 +682,27 @@ class ErrResult<T, E> extends Result<T, E> {
     return this
   }
 
-  expect(message: string, errorClass: DynamicError = Error): T {
+  expect(message: string, errorClass: ErrorClass = Error): never {
     return unwrapFailed(message, this.err, errorClass)
   }
 
-  unwrap(errorClass: DynamicError = ReferenceError): T | never {
+  unwrap(errorClass: ErrorClass = ReferenceError): never {
     return unwrapFailed('Called Result#unwrap on an Err value', this.err, errorClass)
   }
 
-  expectErr(_message: string, _errorClass: DynamicError = Error): E {
+  expectErr(_message: string, _errorClass: ErrorClass = Error): E {
     return this.err
   }
 
-  unwrapErr(_errorClass: DynamicError = ReferenceError): E | never {
+  unwrapErr(_errorClass: ErrorClass = ReferenceError): E | never {
     return this.err
   }
 
-  unwrapOr(defaultValue: T): T {
-    return defaultValue
+  unwrapOr(defaultValue: T | ((err: E) => T)): T {
+    const isFunction = (value: T | ((err: E) => T)): value is (err: E) => T =>
+      typeof value === 'function'
+
+    return isFunction(defaultValue) ? defaultValue(this.err) : defaultValue
   }
 
   unwrapOrElse(fn: (val: E) => T): T {
@@ -675,10 +725,39 @@ class ErrResult<T, E> extends Result<T, E> {
     return fn(this.err)
   }
 
-  match<U>(matcher: Match<T, E, U>): U {
+  match<U>(matcher: { ok: (t: T) => U; err: (e: E) => U }): U {
     return matcher.err(this.err)
   }
 }
+
+/**
+ * @categoryDescription `Result`
+ *
+ * {@link Result} describes what can be done with a `Result` type, and {@link Ok} and
+ * {@link Err} create `Ok` or `Err` results, respectively.
+ *
+ * @module
+ */
+
+/**
+ * Constructs an `Ok` {@link Result}.
+ *
+ * @param ok - The value of type `T` to store.
+ * @typeParam T - The type of the `Ok` value.
+ * @typeParam E - The type of the `Err` value.
+ * @category `Result`
+ */
+export const Ok = <T, E>(ok: T): Result<T, E> => new OkResult<T, E>(ok)
+
+/**
+ * Constructs an `Err` {@link Result}.
+ *
+ * @param err - The value of type `E` to store.
+ * @typeParam T - The type of the `Ok` value.
+ * @typeParam E - The type of the `Err` value.
+ * @category `Result`
+ */
+export const Err = <T, E>(err: E): Result<T, E> => new ErrResult<T, E>(err)
 
 /**
  * Flattens one level of nested `Result`s, converting `Result<Result<T, E>, E>` to
@@ -692,84 +771,202 @@ class ErrResult<T, E> extends Result<T, E> {
  *
  * ```typescript
  * flattenResult(Ok(Ok('hello'))) // => Ok('hello')
- * flattenResult(Ok(Err(5))) // => Err(5)
+ * flattenResult(Ok(Err(5)))      // => Err(5)
  * ```
+ *
+ * @category `Result` Operators
  */
 export const flattenResult = <T, E>(value: Result<Result<T, E>, E>): Result<T, E> => {
   return value.isOk() ? value.unwrap() : Err(value.unwrapErr())
 }
 
 /**
- * Constructs an `Ok` {@link Result}.
+ * Returns true if the `result` is an `Ok`.
  *
- * @param ok - The value of type `T` to store.
+ * @param value - `Result` to test.
  * @typeParam T - The type of the `Ok` value.
  * @typeParam E - The type of the `Err` value.
- */
-export const Ok = <T, E>(ok: T): Result<T, E> => new OkResult<T, E>(ok)
-/**
- * Constructs an `Err` {@link Result}.
  *
- * @param err - The value of type `E` to store.
+ * @example
+ *
+ * ```typescript
+ * isOk(Ok('hello')) // => true
+ * isOk(Err(5))      // => false
+ * ```
+ *
+ * @category `Result` Operators
+ */
+export const isOk = <T, E>(value: Result<Result<T, E>, E>): boolean => value.isOk()
+
+/**
+ * Returns true if the `result` is an `Ok`.
+ *
+ * @param value - `Result` to test.
  * @typeParam T - The type of the `Ok` value.
  * @typeParam E - The type of the `Err` value.
- */
-export const Err = <T, E>(err: E): Result<T, E> => new ErrResult<T, E>(err)
-
-/**
- * Unwraps any errors as a list.
  *
- * @param results - The list of `Result` objects to unwrap.
- * @typeParam T - The type(s) of the `Ok` values in `results`.
- * @typeParam E - The type(s) of the `Err` values in `results`.
+ * @example
+ *
+ * ```typescript
+ * isErr(Ok('hello')) // => false
+ * isErr(Err(5))      // => true
+ * ```
+ *
+ * @category `Result` Operators
  */
-export const unwrapErrors = <T, E>(results: Result<T, E>[]): E[] => {
-  const errors: E[] = []
-
-  for (const result of results) {
-    result.inspectErr((e) => errors.push(e))
-  }
-
-  return errors
-}
+export const isErr = <T, E>(value: Result<Result<T, E>, E>): boolean => value.isErr()
 
 /**
- * Filters a list of {@link Result} for any `Err` values, and throws an exception if the
- * list is not empty.
+ * @categoryDescription `Result` List Operators
+ *
+ * Operations on lists (arrays) of `Result`s. These allow the safe unwrapping of `Ok` or
+ * `Err` results from an array while ignoring the cases which would cause a panic.
+ *
+ * @module
+ */
+
+/**
+ * Unwraps all `Err` values from an array of {@link Result}s.
+ *
+ * `Ok` values in the array are ignored.
+ *
+ * @param results - The array of `Result<any, any>` objects to filter and unwrap.
+ * @typeParam L - A array of `Result<any, any>`.
+ * @returns The array of `Err` results from `results`.
+ *
+ * @remarks
+ *
+ * This may return a mixed type `Err` list and it is the responsibility of the caller to
+ * handle this.
+ *
+ * @category `Result` List Operators
+ */
+// biome-ignore lint/suspicious/noExplicitAny: insufficient inference
+export const unwrapErrs = <L extends Result<any, any>[]>(
+  results: L,
+): InferErr<L[number]>[] => results.filter((v) => v.isErr()).map((v) => v.unwrapErr())
+
+/**
+ * Unwraps all `Err` values from an array of {@link Result}s.
+ *
+ * `Ok` values in the array are ignored.
+ *
+ * @param results - The array of `Result<any, any>` objects to filter and unwrap.
+ * @typeParam L - A array of `Result<any, any>`.
+ * @returns The array of `Err` results from `results`.
+ *
+ * @remarks
+ *
+ * This may return a mixed type `Err` list and it is the responsibility of the caller to
+ * handle this.
+ *
+ * @category `Result` List Operators
+ *
+ * @deprecated Use {@link unwrapErrs} instead.
+ */
+export const unwrapErrors = unwrapErrs
+
+/**
+ * Throws an exception if there are any `Err` values in the array of {@link Result}s.
+ *
+ * The exception message is constructed from string representation of all `Err` values in
+ * the list. If `message` is not provided, it defaults to `Errors found`.
+ *
+ * The exception is created from `errorClass`.
  *
  * @param results - The list of `Result` objects to unwrap.
  * @param message - The message to prepend to the list of errors.
  * @param errorClass - The error class to use, defaulting to `Error`.
- * @typeParam T - The type(s) of the `Ok` values in `results`.
- * @typeParam E - The type(s) of the `Err` values in `results`.
+ * @typeParam L - A array of `Result<any, any>`.
+ *
+ * @category `Result` List Operators
  */
-export const unwrapAndThrowErrors = <T, E>(
-  results: Result<T, E>[],
+// biome-ignore lint/suspicious/noExplicitAny: insufficient inferene
+export const throwErrs = <L extends Result<any, any>[]>(
+  results: L,
   message?: string,
-  errorClass: DynamicError = Error,
+  errorClass: ErrorClass = Error,
 ): void => {
-  const errors = unwrapErrors(results)
+  const errors = unwrapErrs(results)
 
   if (errors.length > 0) {
-    throw new errorClass(
-      `${message || 'Errors found'}:\n${errors.map((e) => ` - ${e}`).join('\n')}`,
-    )
+    const msg =
+      message == null
+        ? 'Errors found:\n'
+        : message.length === 0
+          ? ''
+          : message.endsWith(':')
+            ? `${message}\n`
+            : `${message}:\n`
+
+    throw new errorClass(`${msg}${errors.map((e) => ` - ${e}`).join('\n')}`)
   }
 }
 
 /**
- * Unwraps any results as a list, ignoring errors.
+ * Throws an exception if there are any `Err` values in the array of {@link Result}s.
+ *
+ * The exception message is constructed from string representation of all `Err` values in
+ * the list. If `message` is not provided, it defaults to `Errors found`.
+ *
+ * The exception is created from `errorClass`.
+ *
+ * @param results - The list of `Result` objects to unwrap.
+ * @param message - The message to prepend to the list of errors.
+ * @param errorClass - The error class to use, defaulting to `Error`.
+ * @typeParam L - A array of `Result<any, any>`.
+ *
+ * @category `Result` List Operators
+ *
+ * @deprecated Use {@link throwErrs} instead.
  */
-export const unwrapResults = <T, E, V extends Result<T, E>>(results: V[]): T[] =>
-  results.filter((v) => v.isOk()).map((v) => v.unwrap() as T)
+export const unwrapAndThrowErrors = throwErrs
 
-interface Match<T, E, U> {
-  ok: (val: T) => U
-  err: (val: E) => U
-}
+/**
+ * Unwraps all `Ok` values from an array of {@link Result}s.
+ *
+ * `Err` values in the array are ignored.
+ *
+ * @param results - The array of `Result<any, any>` objects to filter and unwrap.
+ * @typeParam L - A array of `Result<any, any>`.
+ * @returns The array of `Ok` results from `results`.
+ *
+ * @remarks
+ *
+ * This may return a mixed type `Ok` list and it is the responsibility of the caller to
+ * handle this.
+ *
+ * @category `Result` List Operators
+ */
+// biome-ignore lint/suspicious/noExplicitAny: insufficient inferene
+export const unwrapOks = <L extends Result<any, any>[]>(
+  results: L,
+): InferOk<L[number]>[] => results.filter((v) => v.isOk()).map((v) => v.unwrap())
 
-type DynamicError = new (message?: string) => Error
+/**
+ * Unwraps all `Ok` values from an array of {@link Result}s.
+ *
+ * `Err` values in the array are ignored.
+ *
+ * @param results - The array of `Result<any, any>` objects to filter and unwrap.
+ * @typeParam L - A array of `Result<any, any>`.
+ * @returns The array of `Ok` results from `results`.
+ *
+ * @remarks
+ *
+ * This may return a mixed type `Ok` list and it is the responsibility of the caller to
+ * handle this.
+ *
+ * @category `Result` List Operators
+ * @deprecated Use {@link unwrapOks} instead.
+ */
+export const unwrapResults = unwrapOks
 
-const unwrapFailed = <E>(message: string, err: E, errorClass: DynamicError): never => {
+type InferOk<R> = R extends Result<infer T, unknown> ? T : never
+type InferErr<R> = R extends Result<unknown, infer E> ? E : never
+
+type ErrorClass = new (message?: string) => Error
+
+const unwrapFailed = <E>(message: string, err: E, errorClass: ErrorClass): never => {
   throw new errorClass(`${message}: ${err}`)
 }
