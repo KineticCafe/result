@@ -5,9 +5,9 @@ import {
   Ok,
   Result,
   flattenResult,
-  unwrapAndThrowErrors,
-  unwrapErrors,
-  unwrapResults,
+  throwErrs,
+  unwrapErrs,
+  unwrapOks,
 } from '../src/index.js'
 
 describe('Err', () => {
@@ -37,6 +37,18 @@ describe('Result#isOk()', () => {
 
   test('Err(E).isOk() is false', () => {
     expect(Err(3).isOk()).toBe(false)
+  })
+
+  test('Ok(T).isOk((_) => true) is true', () => {
+    expect(Ok('value').isOk((_) => true)).toBe(true)
+  })
+
+  test('Ok(T).isOk((_) => false) is false', () => {
+    expect(Ok('value').isOk((_) => false)).toBe(false)
+  })
+
+  test('Err(E).isOkAnd((_) => true) is true', () => {
+    expect(Err(3).isOk((_) => true)).toBe(false)
   })
 })
 
@@ -97,6 +109,14 @@ describe('Result#mapOr()', () => {
 
   test(`Err(E).mapOr(String, 'five') is 'five')`, () => {
     expect(Err(3).mapOr(String, 'five')).toBe('five')
+  })
+
+  test(`Ok(T).mapOr(String, () => 'five') is String(T)`, () => {
+    expect(Ok(3).mapOr(String, () => 'five')).toBe('3')
+  })
+
+  test(`Err(E).mapOr(String, () => 'five') is 'five')`, () => {
+    expect(Err(3).mapOr(String, () => 'five')).toBe('five')
   })
 })
 
@@ -228,6 +248,14 @@ describe('Result#unwrapOr', () => {
   test('Err(E).unwrapOr(5) is 5', () => {
     expect(Err(3).unwrapOr(5)).toBe(5)
   })
+
+  test('Ok(T).unwrapOr(() => 5) unwraps T', () => {
+    expect(Ok(3).unwrapOr(() => 5)).toBe(3)
+  })
+
+  test('Err(E).unwrapOr(() => 5) is 5', () => {
+    expect(Err(3).unwrapOr(() => 5)).toBe(5)
+  })
 })
 
 describe('Result#unwrapOrElse', () => {
@@ -328,73 +356,57 @@ describe('flattenResult', () => {
   })
 })
 
-describe('unwrapErrors', () => {
+describe('unwrapErrs', () => {
   test('returns an empty list from [Ok, Ok]', () => {
-    expect(unwrapErrors([Ok(1), Ok(3)])).toStrictEqual([])
+    expect(unwrapErrs([Ok(1), Ok(3)])).toStrictEqual([])
   })
 
   test('returns only the errors from [Err, Ok, Err]', () => {
-    expect(unwrapErrors([Err(3), Ok(1), Err('five')])).toStrictEqual([3, 'five'])
+    expect(unwrapErrs([Err(3), Ok(1), Err('five')])).toStrictEqual([3, 'five'])
   })
 })
 
-describe('unwrapAndThrowErrors', () => {
+describe('throwErrs', () => {
   test('does not throw an exception from [Ok, Ok]', () => {
-    expect(() => unwrapAndThrowErrors([Ok(1), Ok(3)], 'errors')).not.toThrowError()
+    expect(() => throwErrs([Ok(1), Ok(3)], 'errors')).not.toThrowError()
   })
 
   test('throws a single exception from [Err, Ok, Err]', () => {
-    expect(() =>
-      unwrapAndThrowErrors([Err(3), Ok(1), Err('five')], 'errors'),
-    ).toThrowError('errors:\n - 3\n - five')
+    expect(() => throwErrs([Err(3), Ok(1), Err('five')], 'errors')).toThrowError(
+      'errors:\n - 3\n - five',
+    )
   })
 
   test('throws a single exception from [Err, Ok, Err]', () => {
-    expect(() => unwrapAndThrowErrors([Err(3), Ok(1), Err('five')])).toThrowError(
+    expect(() => throwErrs([Err(3), Ok(1), Err('five')])).toThrowError(
       'Errors found:\n - 3\n - five',
     )
   })
 })
 
-describe('unwrapResults', () => {
+describe('unwrapOks', () => {
   test('returns an empty list from [Err, Err]', () => {
-    expect(unwrapResults([Err(1), Err(5)])).toStrictEqual([])
+    expect(unwrapOks([Err(1), Err(5)])).toStrictEqual([])
   })
 
   test('returns only the errors, as strings, from [Ok, Err, Ok]', () => {
-    expect(unwrapResults([Ok(1), Err(7), Ok('nine')])).toStrictEqual([1, 'nine'])
+    expect(unwrapOks([Ok(1), Err(7), Ok('nine')])).toStrictEqual([1, 'nine'])
   })
 })
 
-test('new Result<T, E> is unusable', () => {
-  const result = new Result()
+test('Result<T, E> is explicitly abstract', () => {
+  expect(() => new Result()).toThrowError('Result is abstract, use Ok() or Err()')
 
-  expect(() => result.isOk()).toThrowError('Abstract Result')
-  expect(() => result.isOkAnd(Boolean)).toThrowError('Abstract Result')
-  expect(() => result.isErr()).toThrowError('Abstract Result')
-  expect(() => result.isErrAnd(Boolean)).toThrowError('Abstract Result')
-  expect(() => result.map(() => null)).toThrowError('Abstract Result')
-  expect(() => result.mapOr(() => null, null)).toThrowError('Abstract Result')
-  expect(() =>
-    result.mapOrElse(
-      () => null,
-      () => null,
-    ),
-  ).toThrowError('Abstract Result')
-  expect(() => result.mapErr(() => null)).toThrowError('Abstract Result')
-  expect(() => result.inspectOk(() => null)).toThrowError('Abstract Result')
-  expect(() => result.inspectErr(() => null)).toThrowError('Abstract Result')
-  expect(() => result.expect('')).toThrowError('Abstract Result')
-  expect(() => result.unwrap()).toThrowError('Abstract Result')
-  expect(() => result.expectErr('')).toThrowError('Abstract Result')
-  expect(() => result.unwrapErr()).toThrowError('Abstract Result')
-  expect(() => result.unwrapOr(null)).toThrowError('Abstract Result')
-  expect(() => result.unwrapOrElse(() => null)).toThrowError('Abstract Result')
-  expect(() => result.and(result)).toThrowError('Abstract Result')
-  expect(() => result.andThen(() => result)).toThrowError('Abstract Result')
-  expect(() => result.or(result)).toThrowError('Abstract Result')
-  expect(() => result.orElse(() => result)).toThrowError('Abstract Result')
-  expect(() => result.match({ ok: () => null, err: () => null })).toThrowError(
-    'Abstract Result',
-  )
+  // These are used to prove that we treat `Result<T, E>` methods as abstract.
+  // It's a little roundabout, but it does work.
+
+  const ok = Ok(3)
+  const err = Err(3)
+  const isOk = Result.prototype.isOk
+  const isErr = Result.prototype.isErr
+
+  expect(() => isOk.apply(ok)).toThrowError('Abstract method Result#isOk')
+  expect(() => isErr.apply(ok)).toThrowError('Abstract method Result#isErr')
+  expect(() => isOk.apply(err)).toThrowError('Abstract method Result#isOk')
+  expect(() => isErr.apply(err)).toThrowError('Abstract method Result#isErr')
 })

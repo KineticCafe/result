@@ -5,16 +5,19 @@ on:
     branches:
       - main
 
-jobs:
-  deploy_pages:
-    concurrency: ci-pages-${{ github.ref }}
-    runs-on: ubuntu-latest
+  workflow_dispatch:
 
-    permissions:
-      contents: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v4
 
       - uses: pnpm/action-setup@v3
         with:
@@ -26,12 +29,28 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
+      - run: |
+          pnpm install --frozen-lockfile
+          pnpm build:docs
+          touch docs/.nojekyll
 
-      - run: pnpm build:docs
-
-      - run: touch docs/.nojekyll
-
-      - uses: JamesIves/github-pages-deploy-action@v4.5.0
+      - uses: actions/upload-pages-artifact@v3
         with:
-          folder: docs
+          path: docs
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
