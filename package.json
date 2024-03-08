@@ -1,7 +1,7 @@
 {
   "name": "@kineticcafe/result",
   "type": "module",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A Result type loosely based on Rust Result",
   "author": "Kinetic Commerce & contributors",
   "homepage": "https://github.com/KineticCafe/result#readme",
@@ -36,6 +36,7 @@
     "check:fix": "biome check --apply .",
     "format": "biome format --write .",
     "format:check": "biome format .",
+    "prepack": "pnpm build",
     "lint": "biome lint .",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
