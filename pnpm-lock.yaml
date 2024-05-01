@@ -10,7 +10,7 @@ devDependencies:
     version: 1.6.3
   '@tsconfig/recommended':
     specifier: ^1.0.3
-    version: 1.0.5
+    version: 1.0.6
   '@types/node':
     specifier: ^20.11.20
     version: 20.12.7
@@ -661,8 +661,8 @@ packages:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
     dev: true
 
-  /@tsconfig/recommended@1.0.5:
-    resolution: {integrity: sha512-bbozf0TZVH1Tu9hET9HYTtKeOMBBR01kjhc8s+c9cDFQU8Jw6F9A3tRZYOWiMEyMqpf/3LSw2b528g1k8TkYvg==}
+  /@tsconfig/recommended@1.0.6:
+    resolution: {integrity: sha512-0IKu9GHYF1NGTJiYgfWwqnOQSlnE9V9R7YohHNNf0/fj/SyOZWzdd06JFr0fLpg1Mqw0kGbYg8w5xdkSqLKM9g==}
     dev: true
 
   /@types/estree@1.0.5:
