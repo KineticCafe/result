@@ -1,6 +1,10 @@
 # @kineticcafe/result
 
-## 0.6.0 / 2024-03-05
+## 0.6.2 / 2025-03-01
+
+- Dependency updates.
+
+## 0.6.1 / 2024-03-05
 
 - Renamed `unwrapErrors` to `unwrapErrs`, `unwrapAndThrowErrors` to `throwErrs`,
   and `unwrapResults` to `unwrapOks`. Despite the suggestion inherent in the
@@ -17,8 +21,8 @@
   playground suggests that the internal utility types `InferErr` and `InferOk`
   cause Typescript to properly resolve disparate types.
 
-- Ensured that `new Result()` throws an exception; the only way to instantiate
-  a `Result` is through `Ok` or `Err`, which construct internal (non-exported)
+- Ensured that `new Result()` throws an exception; the only way to instantiate a
+  `Result` is through `Ok` or `Err`, which construct internal (non-exported)
   `OkResult` and `ErrResult` classes.
 
   - Unbound methods from `Result.prototype` throw better exceptions when
