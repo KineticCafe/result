@@ -42,11 +42,7 @@
     "test:coverage": "vitest --coverage",
     "test:watch": "vitest --watch"
   },
-  "files": [
-    "dist",
-    "*.md",
-    "licenses/*"
-  ],
+  "files": ["dist", "*.md", "licenses/*"],
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@tsconfig/recommended": "^1.0.8",
