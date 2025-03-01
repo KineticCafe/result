@@ -1,7 +1,7 @@
 {
   "name": "@kineticcafe/result",
   "type": "module",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "A Result type loosely based on Rust Result",
   "author": "Kinetic Commerce & contributors",
   "homepage": "https://github.com/KineticCafe/result#readme",
@@ -42,7 +42,11 @@
     "test:coverage": "vitest --coverage",
     "test:watch": "vitest --watch"
   },
-  "files": ["dist", "*.md", "licenses/*"],
+  "files": [
+    "dist",
+    "*.md",
+    "licenses/*"
+  ],
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@tsconfig/recommended": "^1.0.8",
