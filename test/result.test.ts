@@ -2,9 +2,9 @@ import { describe, expect, expectTypeOf, test } from 'vitest'
 
 import {
   Err,
+  flattenResult,
   Ok,
   Result,
-  flattenResult,
   throwErrs,
   unwrapErrs,
   unwrapOks,
