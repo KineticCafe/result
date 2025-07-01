@@ -62,7 +62,7 @@ export class Result<T, E> {
    * Err('hey').isOk((v) => v > 1)  // => false
    * ```
    */
-  isOk(pred?: (val: T) => boolean): boolean {
+  isOk(_pred?: (val: T) => boolean): boolean {
     this.abstractMethod('isOk')
   }
 
@@ -104,7 +104,7 @@ export class Result<T, E> {
    * Err('hey').isErr((e) => e === 'hey')   // => true
    * ```
    */
-  isErr(pred?: (val: E) => boolean): boolean {
+  isErr(_pred?: (val: E) => boolean): boolean {
     this.abstractMethod('isErr')
   }
 
@@ -141,7 +141,7 @@ export class Result<T, E> {
    * Err('hey').map((v) => v * 2) // => Err('hey')
    * ```
    */
-  map<U>(fn: (val: T) => U): Result<U, E> {
+  map<U>(_fn: (val: T) => U): Result<U, E> {
     this.abstractMethod('map')
   }
 
@@ -184,7 +184,7 @@ export class Result<T, E> {
    *
    * @see {@link Result#mapOrElse}
    */
-  mapOr<U>(fn: (val: T) => U, defaultValue: U | ((err: E) => U)): U {
+  mapOr<U>(_fn: (val: T) => U, _defaultValue: U | ((err: E) => U)): U {
     this.abstractMethod('mapOr')
   }
 
@@ -245,7 +245,7 @@ export class Result<T, E> {
    * Err(13).mapErr((e) => new Error(`error code: ${e}`)) // => Err('error code: 13')
    * ```
    */
-  mapErr<F>(fn: (val: E) => F): Result<T, F> {
+  mapErr<F>(_fn: (val: E) => F): Result<T, F> {
     this.abstractMethod('mapErr')
   }
 
@@ -270,7 +270,7 @@ export class Result<T, E> {
    * // console output: 'ok: 2'
    * ```
    */
-  inspectOk(fn: (val: T) => void): Result<T, E> {
+  inspectOk(_fn: (val: T) => void): Result<T, E> {
     this.abstractMethod('inspectOk')
   }
 
@@ -291,7 +291,7 @@ export class Result<T, E> {
    * // console output: 'err: bar'
    * ```
    */
-  inspectErr(fn: (val: E) => void): Result<T, E> {
+  inspectErr(_fn: (val: E) => void): Result<T, E> {
     this.abstractMethod('inspectErr')
   }
 
@@ -317,7 +317,7 @@ export class Result<T, E> {
    * }
    * ```
    */
-  expect(message: string, errorClass: ErrorClass = Error): T | never {
+  expect(_message: string, _errorClass: ErrorClass = Error): T | never {
     this.abstractMethod('expect')
   }
 
@@ -341,7 +341,7 @@ export class Result<T, E> {
    * }
    * ```
    */
-  unwrap(errorClass: ErrorClass = ReferenceError): T | never {
+  unwrap(_errorClass: ErrorClass = ReferenceError): T | never {
     this.abstractMethod('unwrap')
   }
 
@@ -366,7 +366,7 @@ export class Result<T, E> {
    * }
    * ```
    */
-  expectErr(message: string, errorClass: ErrorClass = Error): E | never {
+  expectErr(_message: string, _errorClass: ErrorClass = Error): E | never {
     this.abstractMethod('expectErr')
   }
 
@@ -389,7 +389,7 @@ export class Result<T, E> {
    * }
    * ```
    */
-  unwrapErr(errorClass: ErrorClass = ReferenceError): E | never {
+  unwrapErr(_errorClass: ErrorClass = ReferenceError): E | never {
     this.abstractMethod('unwrapErr')
   }
 
@@ -424,7 +424,7 @@ export class Result<T, E> {
    * Err('foo').unwrapOr((e) => e.length) // => 3
    * ```
    */
-  unwrapOr(defaultValue: T | ((err: E) => T)): T {
+  unwrapOr(_defaultValue: T | ((err: E) => T)): T {
     this.abstractMethod('unwrapOr')
   }
 
@@ -460,7 +460,7 @@ export class Result<T, E> {
    * Err(3).and(Ok('5')) // => Err(3)
    * ```
    */
-  and<U>(result: Result<U, E>): Result<U, E> {
+  and<U>(_result: Result<U, E>): Result<U, E> {
     this.abstractMethod('and')
   }
 
@@ -482,7 +482,7 @@ export class Result<T, E> {
    * Ok(10).andThen(squaredString) // => Err('overflowed')
    * ```
    */
-  andThen<U>(fn: (val: T) => Result<U, E>): Result<U, E> {
+  andThen<U>(_fn: (val: T) => Result<U, E>): Result<U, E> {
     this.abstractMethod('andThen')
   }
 
@@ -498,7 +498,7 @@ export class Result<T, E> {
    * Err('not a 2').or(Err('different err')) // => Err('different err')
    * ```
    */
-  or<F>(result: Result<T, F>): Result<T, F> {
+  or<F>(_result: Result<T, F>): Result<T, F> {
     this.abstractMethod('or')
   }
 
@@ -518,7 +518,7 @@ export class Result<T, E> {
    * Ok(10).orElse(squaredString).unwrapErr() // => 'overflowed'
    * ```
    */
-  orElse<F>(fn: (val: E) => Result<T, F>): Result<T, F> {
+  orElse<F>(_fn: (val: E) => Result<T, F>): Result<T, F> {
     this.abstractMethod('orElse')
   }
 
@@ -549,7 +549,7 @@ export class Result<T, E> {
    * }
    * ```
    */
-  match<U>(matcher: { ok: (t: T) => U; err: (e: E) => U }): U {
+  match<U>(_matcher: { ok: (t: T) => U; err: (e: E) => U }): U {
     this.abstractMethod('match')
   }
 
@@ -578,7 +578,7 @@ class OkResult<T, E> extends Result<T, E> {
     return Ok(fn(this.ok))
   }
 
-  mapOr<U>(fn: (val: T) => U, defaultValue: U | ((err: E) => U)): U {
+  mapOr<U>(fn: (val: T) => U, _defaultValue: U | ((err: E) => U)): U {
     return fn(this.ok)
   }
 
@@ -713,7 +713,7 @@ class ErrResult<T, E> extends Result<T, E> {
     return Err(this.err)
   }
 
-  andThen<U>(fn: (val: T) => Result<U, E>): Result<U, E> {
+  andThen<U>(_fn: (val: T) => Result<U, E>): Result<U, E> {
     return Err(this.err)
   }
 
