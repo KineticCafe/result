@@ -3,12 +3,14 @@ name: Check DCO
 on:
   pull_request:
 
+permissions: {}
+
 jobs:
   check-dco:
+    name: Check DCO Signature
+    permissions:
+      contents: read
+
     runs-on: ubuntu-latest
     steps:
-      - uses: KineticCafe/actions-dco@v1.3
-        with:
-          exempt-authors: |
-            @kineticcommerce.com
-            @kineticcafe.com
+      - uses: KineticCafe/actions-dco@416cafbc9c07f26219d09981d9ac49ce29b5bfea # v1.3.4
