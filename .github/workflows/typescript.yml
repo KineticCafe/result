@@ -97,7 +97,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - uses: mongolyy/reviewdog-action-biome@25e6813418e91845859fadb665e49c7590667caf # v2.0.0
+      - uses: mongolyy/reviewdog-action-biome@dd8f821a045271bebf46c54849a541e4c59851e1 # v2.3.0
 
   misspell:
     if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
