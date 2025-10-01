@@ -65,8 +65,8 @@ jobs:
 
     permissions:
       contents: read
-      pages: write
-      id-token: write
+      pages: write     # Publish to GitHub Pages
+      id-token: write  # Publish to GitHub Pages
 
     steps:
       - name: Harden Runner
