@@ -48,7 +48,7 @@
     "licenses/*"
   ],
   "devDependencies": {
-    "@biomejs/biome": "2.3.8",
+    "@biomejs/biome": "2.3.10",
     "@tsconfig/recommended": "^1.0.10",
     "@types/node": "^20.19.19",
     "@vitest/coverage-v8": "^3.2.4",
