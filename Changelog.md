@@ -1,5 +1,9 @@
 # @kineticcafe/result
 
+## 0.6.3 / 2026-01-5
+
+- Dependency updates.
+
 ## 0.6.2 / 2025-03-01
 
 - Dependency updates.

@@ -1,7 +1,7 @@
 {
   "name": "@kineticcafe/result",
   "type": "module",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "A Result type loosely based on Rust Result",
   "author": "Kinetic Commerce & contributors",
   "homepage": "https://github.com/KineticCafe/result#readme",
@@ -48,26 +48,18 @@
     "licenses/*"
   ],
   "devDependencies": {
-    "@biomejs/biome": "2.3.8",
+    "@biomejs/biome": "2.3.11",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^20.19.19",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.0.0",
     "concurrently": "^9.2.1",
     "pkgroll": "^2.15.4",
-    "publint": "^0.3.13",
+    "publint": "^0.3.16",
     "tsx": "^4.20.6",
     "typedoc": "^0.28.13",
     "typedoc-material-theme": "^1.4.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.0"
   },
-  "pnpm": {
-    "overrides": {
-      "esbuild": "^0.25.0"
-    },
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  },
-  "packageManager": "pnpm@10.17.1+sha512.17c560fca4867ae9473a3899ad84a88334914f379be46d455cbf92e5cf4b39d34985d452d2583baf19967fa76cb5c17bc9e245529d0b98745721aa7200ecaf7a"
+  "packageManager": "pnpm@10.27.0+sha512.72d699da16b1179c14ba9e64dc71c9a40988cbdc65c264cb0e489db7de917f20dcf4d64d8723625f2969ba52d4b7e2a1170682d9ac2a5dcaeaab732b7e16f04a"
 }
